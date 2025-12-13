@@ -1,3 +1,4 @@
-.gitignorenode_modules
+node_modules
 .env
+cookies.txt
 .DS_Store
