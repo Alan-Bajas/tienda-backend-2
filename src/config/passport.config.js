@@ -15,7 +15,7 @@ const cookieExtractor = (req) => {
 
 export const initializePassport = () => {
 
-  // 🔐 LOGIN con Passport (estrategia local)
+  // 🔐 LOGIN con Passport Local
   passport.use(
     "login",
     new LocalStrategy(
@@ -37,9 +37,9 @@ export const initializePassport = () => {
     )
   );
 
-  // 🔑 CURRENT con JWT
+  // 🔑 JWT para rutas protegidas
   passport.use(
-    "current",
+    "jwt",
     new JwtStrategy(
       {
         jwtFromRequest: ExtractJwt.fromExtractors([cookieExtractor]),
@@ -47,7 +47,9 @@ export const initializePassport = () => {
       },
       async (jwtPayload, done) => {
         try {
-          return done(null, jwtPayload.user);
+          const user = await UserModel.findById(jwtPayload.user._id).lean();
+          if (!user) return done(null, false);
+          return done(null, user);
         } catch (error) {
           return done(error);
         }

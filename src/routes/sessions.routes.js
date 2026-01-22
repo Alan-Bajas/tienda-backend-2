@@ -13,7 +13,9 @@ router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
     const user = await UserModel.findOne({ email });
-    if (!user) return res.status(401).send({ status: "error", error: "Usuario no existe" });
+    if (!user) {
+      return res.status(401).send({ status: "error", error: "Usuario no existe" });
+    }
 
     if (!isValidPassword(user, password)) {
       return res.status(401).send({ status: "error", error: "Credenciales inválidas" });
@@ -22,16 +24,23 @@ router.post("/login", async (req, res) => {
     const token = generateToken(user);
 
     return res
-      .cookie("coderCookieToken", token, { httpOnly: true })
+      .cookie("coderCookieToken", token, {
+        httpOnly: true,
+        sameSite: "lax",
+      })
       .send({ status: "success", message: "Login OK" });
-  } catch (err) {
-    return res.status(500).send({ status: "error", error: err.message });
+  } catch (error) {
+    return res.status(500).send({ status: "error", error: error.message });
   }
 });
 
-// GET /api/sessions/current
-router.get("/current", passport.authenticate("current", { session: false }), (req, res) => {
-  return res.send({ status: "success", payload: req.user });
-});
+// GET /api/sessions/current (RUTA PROTEGIDA CON JWT)
+router.get(
+  "/current",
+  passport.authenticate("jwt", { session: false }),
+  (req, res) => {
+    return res.send({ status: "success", user: req.user });
+  }
+);
 
 export default router;
